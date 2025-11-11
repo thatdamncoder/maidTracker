@@ -1,26 +1,96 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* 
+  Design System
+  All theme tokens (colors, radii, etc.) are defined inside @theme.
+  All color values use HSL format.
+*/
+
+@theme {
+  /* Base colors */
+  --color-background: hsl(40 30% 97%);
+  --color-foreground: hsl(25 20% 25%);
+
+  /* Cards / surfaces */
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(25 20% 25%);
+
+  /* Popovers */
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(25 20% 25%);
+
+  /* Main theme colors */
+  --color-primary: hsl(150 25% 55%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(40 35% 90%);
+  --color-secondary-foreground: hsl(25 20% 25%);
+  --color-muted: hsl(40 20% 94%);
+  --color-muted-foreground: hsl(25 10% 50%);
+  --color-accent: hsl(10 60% 75%);
+  --color-accent-foreground: hsl(25 20% 25%);
+  --color-destructive: hsl(0 70% 60%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+
+  /* Borders, rings, inputs */
+  --color-border: hsl(40 20% 88%);
+  --color-input: hsl(40 20% 88%);
+  --color-ring: hsl(150 25% 55%);
+
+  /* Radii */
+  --radius: 1rem;
+
+  /* custom colors */
+  --color-present: hsl(150 40% 85%);
+  --color-absent: hsl(10 60% 88%);
+  --color-today: hsl(150 25% 55%);
+
+  /* 🧭 Sidebar */
+  --color-sidebar-background: hsl(0 0% 98%);
+  --color-sidebar-foreground: hsl(240 5.3% 26.1%);
+  --color-sidebar-primary: hsl(240 5.9% 10%);
+  --color-sidebar-primary-foreground: hsl(0 0% 98%);
+  --color-sidebar-accent: hsl(240 4.8% 95.9%);
+  --color-sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --color-sidebar-border: hsl(220 13% 91%);
+  --color-sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* 🌙 Dark mode overrides */
+@layer base {
+  .dark {
+    --color-background: hsl(25 15% 15%);
+    --color-foreground: hsl(40 30% 95%);
+    --color-card: hsl(25 15% 18%);
+    --color-card-foreground: hsl(40 30% 95%);
+    --color-popover: hsl(25 15% 18%);
+    --color-popover-foreground: hsl(40 30% 95%);
+    --color-primary: hsl(150 25% 55%);
+    --color-primary-foreground: hsl(0 0% 100%);
+    --color-secondary: hsl(25 15% 22%);
+    --color-secondary-foreground: hsl(40 30% 95%);
+    --color-muted: hsl(25 15% 22%);
+    --color-muted-foreground: hsl(40 15% 65%);
+    --color-accent: hsl(10 60% 65%);
+    --color-accent-foreground: hsl(40 30% 95%);
+    --color-destructive: hsl(0 70% 50%);
+    --color-destructive-foreground: hsl(0 0% 100%);
+    --color-border: hsl(25 15% 25%);
+    --color-input: hsl(25 15% 25%);
+    --color-ring: hsl(150 25% 55%);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Dark mode colors */
+    --color-present: hsl(150 30% 30%);
+    --color-absent: hsl(10 50% 35%);
+    --color-today: hsl(150 25% 55%);
+
+    /* Dark Sidebar */
+    --color-sidebar-background: hsl(240 5.9% 10%);
+    --color-sidebar-foreground: hsl(240 4.8% 95.9%);
+    --color-sidebar-primary: hsl(224.3 76.3% 48%);
+    --color-sidebar-primary-foreground: hsl(0 0% 100%);
+    --color-sidebar-accent: hsl(240 3.7% 15.9%);
+    --color-sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+    --color-sidebar-border: hsl(240 3.7% 15.9%);
+    --color-sidebar-ring: hsl(217.2 91.2% 59.8%);
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
