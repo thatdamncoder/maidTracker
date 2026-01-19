@@ -31,6 +31,8 @@ const colorOptions = [
   { name: 'Mint', value: '160 45% 65%' },
 ];
 
+const SAGE_COLOR_HSL = "hsl(150 25% 55%)";
+
 export const MaidSelector = ({ maids, selectedMaidId, onSelectMaid, onAddMaid, onUpdateMaid }: MaidSelectorProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -45,8 +47,10 @@ export const MaidSelector = ({ maids, selectedMaidId, onSelectMaid, onAddMaid, o
     const newMaid: Maid = {
       id: Date.now().toString(),
       name: newMaidName.trim(),
-      color: selectedColor,
+      created_at: new Date(),
       maxLeavesPerMonth: maxLeaves,
+      joined_on: new Date(),
+      is_active: true
     };
     
     onAddMaid(newMaid);
@@ -87,8 +91,8 @@ export const MaidSelector = ({ maids, selectedMaidId, onSelectMaid, onAddMaid, o
             onClick={() => onSelectMaid(maid.id)}
             className="rounded-xl"
             style={selectedMaidId === maid.id ? {
-              backgroundColor: `hsl(${maid.color})`,
-              borderColor: `hsl(${maid.color})`,
+              backgroundColor: SAGE_COLOR_HSL,
+              borderColor: SAGE_COLOR_HSL,
             } : undefined}
           >
             {maid.name}

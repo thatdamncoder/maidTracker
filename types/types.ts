@@ -6,10 +6,10 @@ export interface YearlyOverviewProps {
   maxLeavesPerMonth: number;
 }
 export interface AttendanceRecord {
-  date: string; // YYYY-MM-DD format
+  maidId: string;
+  date: string;
   status: 'present' | 'absent';
   reason?: string;
-  maidId: string;
 }
 
 export interface CalendarProps {
@@ -22,7 +22,27 @@ export interface CalendarProps {
 
 export interface Maid {
   id: string;
+  created_at: Date;
   name: string;
-  color: string;
   maxLeavesPerMonth: number;
+  joined_on: Date;
+  is_active: boolean;
+}
+
+export interface Helper {
+  id: string;
+  name: string;
+  monthlyLeaveLimit: number;
+  salary: number;
+  startDate: string;
+  records: AttendanceRecord[];
+  receipts: PaymentReceipt[];
+}
+
+export interface PaymentReceipt {
+  id: string;
+  date: string;
+  amount: number;
+  imageUrl: string;
+  note?: string;
 }

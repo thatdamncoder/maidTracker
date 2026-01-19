@@ -1,0 +1,124 @@
+for each maid
+1. month view-
+    1. present/absent which date    
+    2. for each absent- reason for leave, for present- any note
+    3. current date highlighted
+    4. right side- summary of month - total presents + absents
+    5. list of absent dates + their reasons
+    6. navigation to next/prev month
+2. year view-
+    1. for all months, total leaves (+/-), buffer leave (carried forward / extra taken)
+    2. till now carry forward leave
+
+
+Routes-
+tsx routes-
+1. /
+2. /maid/[maidno] (later)
+3. /[maidno]/year
+4. /[maidno]/month
+5. 
+
+ts routes- backend routes
+GET /maids (for logged in user) -> all maids
+GET /attendance/[maid_id]?month=[]&year=[] -> integer (get through bitwise operations)
+GET /absences/[maid_id]?month=[]&year=[] -> to show all absences and their reasons in the right column
+GET /year/[maid_id]?month=[] to get attendance yearly
+PUT /maids/[maid_id] update maid details
+POST /maids add a new maid 
+POST /attendance/[maid_id]?day=[]&month=[]&year=[] {with note} add or update attendance
+DELETE /maids to delete a maid
+
+later-
+GET /receipt/[maid_id] -> get all receipts for maid
+POST /receipt/[maid_id] -> add a receipt
+PUT /receipt/[maid_id]/[receiptid] edit a receipt
+DELETE /receipt/[maid_id]/[receiptid] -> delete a receipt
+
+
+Tables-
+maid{
+    id,
+    name,
+    max_leaves,
+    active,
+    joined_on,
+    created_at
+}
+attendance{ 
+    id,
+    created_at,
+    maid_id,
+    month,
+    year,
+    attendance_bits, (bitwise operations to get data for each date 0-31)
+    total_absent,
+    updated_at
+}
+reason{
+    id,
+    created_at,
+    maid_id,
+    status,
+    day,
+    month,
+    year,
+    reason
+}
+
+
+--------------------------------------------- NEW TABLES
+
+
+CREATE TABLE maids (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  salary numeric(10,2),
+  max_leaves integer DEFAULT 2,
+  is_active boolean DEFAULT true,
+  joined_on date DEFAULT CURRENT_DATE,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Create attendance_monthly table
+CREATE TABLE attendance_monthly (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  maid_id uuid NOT NULL REFERENCES maids(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  month integer NOT NULL CHECK (month BETWEEN 1 AND 12),
+  year integer NOT NULL,
+  attendance_bits bit(31) NOT NULL DEFAULT B'0000000000000000000000000000000',
+  marked_upto_day integer DEFAULT 0,
+  total_absent integer DEFAULT 0,
+  updated_at timestamptz DEFAULT now(),
+  UNIQUE(maid_id, month, year)
+);
+
+-- Create attendance_exceptions table
+CREATE TABLE attendance_exceptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  maid_id uuid NOT NULL REFERENCES maids(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  status text NOT NULL CHECK (status IN ('absent', 'half-day', 'overtime')),
+  note text,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(maid_id, date)
+);
+
+-- Create payments table
+CREATE TABLE payments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  maid_id uuid NOT NULL REFERENCES maids(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  amount numeric(10,2) NOT NULL,
+  payment_date date DEFAULT CURRENT_DATE,
+  receipt_image_url text,
+  note text,
+  created_at timestamptz DEFAULT now()
+);
+
+
+ 

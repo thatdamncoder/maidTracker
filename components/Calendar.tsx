@@ -53,8 +53,8 @@ export const Calendar = ({ currentDate, attendanceRecords, onDayClick, maxLeaves
                   "aspect-square rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105",
                   "text-sm md:text-base font-medium relative",
                   !attendance && "bg-muted/30 text-foreground hover:bg-muted/50",
-                  attendance?.status === 'present' && "bg-present text-foreground",
-                  attendance?.status === 'absent' && "bg-absent text-foreground",
+                  attendance?.status && "bg-present text-foreground",
+                  attendance?.status && "bg-absent text-foreground",
                   isCurrentDay && "ring-2 ring-today ring-offset-2 ring-offset-background"
                 )}
               >
