@@ -11,9 +11,10 @@ import { NextRequest } from "next/server";
 
 export async function requireAuth(_req: NextRequest) {
   const session = await auth();
+  // console.log("session", session);
 
   if (!session || !session.user) {
-    throw new Error("Unauthorized");
+    return null;
   }
 
   return {

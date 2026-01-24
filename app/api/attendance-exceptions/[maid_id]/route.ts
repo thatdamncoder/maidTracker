@@ -1,37 +1,66 @@
-import { createClientSideSupabaseClient} from "@/utils/supabase/client"
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+import { requireAuth } from "@/lib/api-auth";
 
-const supabase = createClientSideSupabaseClient();
-
-export const GET = async (req: NextRequest, {params} : {params: Promise<{maid_id : string}>}) => {
-    // console.log(params);
-    // GET app/api/absences/[maid_id]?month=1&year=2025
-    const {maid_id} = await params;
-    const month = req.nextUrl.searchParams.get("month");
-    const year = req.nextUrl.searchParams.get("year");
-    if (!maid_id){
-        return NextResponse.json({error: "Maid_id not found in params", status: 400});
-    }
-    if (!month){
-        return NextResponse.json({error: "Month not found in params", status: 400});
-    }
-    if (!year){
-        return NextResponse.json({error: "Month not found in params", status: 400});
-    }
-
-    const {data, error} = await supabase
-                        .from("reason")
-                        .select("day, month, year, comment")
-                        .eq('maid_id', maid_id)
-                        .eq('month', month)
-                        .eq("year", year)
-                        .eq("status", false);
-    if (error){
-        console.log("Error fetching attendance at app/api/absences/GET", error.message);
-        return NextResponse.json({error, status: 500});
-    }
-    console.log("Absences from app/api/absences/GET fetched");
-    console.log(data);
-    return NextResponse.json({data});
+interface Params {
+  maid_id: string;
 }
 
+/**
+ * GET /attendance-exceptions/{maid_id}?month=&year=&status? (status is optional)
+ * Fetch notes / exceptions for analytics & listings
+ */
+export async function GET(req: NextRequest, {params} : {params: Promise<Params>}) {
+  const authContext = await requireAuth(req);
+
+    if (!authContext) {
+        return NextResponse.json(
+            { error: "Unauthorized" },
+            { status: 401 }
+        );
+    }
+    const { user } = authContext;
+    const {maid_id} = await params;
+  const { searchParams } = new URL(req.url);
+
+  const month = Number(searchParams.get("month"));
+  const year = Number(searchParams.get("year"));
+  const status = searchParams.get("status"); // optional
+
+  if (!month || !year) {
+    return NextResponse.json(
+      { error: "month and year are required" },
+      { status: 400 }
+    );
+  }
+
+  let query = supabase
+    .from("attendance_exceptions")
+    .select("date, status, note")
+    .eq("maid_id", maid_id)
+    .eq("user_id", user.id)
+    .gte("date", `${year}-${String(month).padStart(2, "0")}-01`)
+    .lte("date", `${year}-${String(month).padStart(2, "0")}-31`)
+    .order("date");
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  const { data, error } = await query;
+  console.log("error inside attendance exceptions", error);
+
+  if (error) {
+    return NextResponse.json(
+      { error: error },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({
+    month,
+    year,
+    count: data.length,
+    notes: data,
+  });
+}

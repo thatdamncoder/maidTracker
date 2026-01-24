@@ -1,8 +1,8 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import Dashboard from "@/components/Dashboard";
-import Login from "@/components/Login";
-import { signIn } from "next-auth/react";
 
 export default async function Home() {
-  return <Login />
+  const session = await auth();
+  console.log("session inside home", session);
+  redirect(session ? "/dashboard" : "/login");
 }

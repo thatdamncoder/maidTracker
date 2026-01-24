@@ -1,0 +1,118 @@
+add payment receipt storage, whatsapp notifications
+change to soft delete
+correct for february
+total absent trigger
+payments
+
+maid_object = {
+        "id": "169e4841-8121-4e4e-a0f1-33dbacb1a8fb",
+        "user_id": "28a32533-7c29-4edd-a4d8-14bc37379d89",
+        "name": "mamta",
+        "salary": 3000,
+        "max_leaves": 4,
+        "is_active": true,
+        "joined_on": "2026-01-20",
+        "created_at": "2026-01-20T19:26:47.351329+00:00",
+        "updated_at": "2026-01-20T19:26:47.351329+00:00"
+    }
+optional is denoted with ?
+
+GET api/maids returns array of maid_object s
+POST api/maids -> takes (name,salary?,max_leaves?,joined_on?) returns maid_object
+GET api/maids/{maid_id} returns maid_object
+GET api/attendance/{maid_id}?month=&year= returns {
+    "month": 1,
+    "year": 2026,
+    "totalAbsent": 2,
+    "lastMarkedDay": 31,
+    "days": [
+        {
+            "day": 1,
+            "marked": false,
+            "note": null
+        },
+        ...,
+        {
+            "day": 18,
+            "marked": true,
+            "status": "present",
+            "note": "came early"
+        },
+        ...
+        {
+            "day": 20,
+            "marked": false,
+            "note": "came early"
+        },
+        {
+            "day": 21,
+            "marked": true,
+            "status": "present",
+            "note": null
+        },
+        ...
+        {
+            "day": 24,
+            "marked": true,
+            "status": "absent",
+            "note": "not in town"
+        },
+        ...
+        {
+            "day": 31,
+            "marked": true,
+            "status": "absent",
+            "note": "festival"
+        }
+    ]
+}
+
+
+POST api/attendance/{maid_id} (create or update) takes 
+{
+    "day": 24, 
+    "month": 1,
+    "year": 2026,
+    "status": "absent", (absent, present, unmark)
+    "note": "ptm" (can be null)
+} 
+
+GET api/attendance/{maid_id}/yearly?year= returns
+{
+    "year": 2026,
+    "summary": [
+        {
+            "month": 1,
+            "total_absent": 2
+        },
+        ...
+        {
+            "month": 12,
+            "total_absent": 0
+        }
+    ]
+}
+
+GET /attendance-exceptions/{maid_id}?month=&year=&status? (status is optional), fetch notes / exceptions for analytics & listings
+returns {
+    "month": 1,
+    "year": 2026,
+    "count": 3,
+    "notes": [
+        {
+            "date": "2026-01-21",
+            "status": "absent",
+            "note": "out of town"
+        },
+        {
+            "date": "2026-01-22",
+            "status": "absent",
+            "note": "festival"
+        },
+        {
+            "date": "2026-01-24",
+            "status": "absent",
+            "note": "ptm"
+        }
+    ]
+}

@@ -1,11 +1,8 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { createClient } from "@supabase/supabase-js";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // server-only
-);
+const supabase = createServiceRoleSupabaseClient();
 
 export const { handlers, auth, signIn, signOut} = NextAuth({
   providers: [
@@ -17,6 +14,7 @@ export const { handlers, auth, signIn, signOut} = NextAuth({
 
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60 * 24//1hr
   },
 
   callbacks: {
