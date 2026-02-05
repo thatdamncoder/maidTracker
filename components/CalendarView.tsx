@@ -28,7 +28,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const prevMonth = () => onDateChange(new Date(year, month - 1, 1));
   const nextMonth = () => onDateChange(new Date(year, month + 1, 1));
 
-  const handleDayClick = (day: number) => {
+  const handleDayClick = (day: number) => {``
     const record = records.find(r => r.day === day);
     setSelectedDay(day);
     setEditStatus(record?.status || 'present');

@@ -1,126 +1,86 @@
-import { createServiceRoleSupabaseClient } from "@/lib/supabase";
+import { createServiceRoleSupabaseClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-export async function POST(
-    req: Request,
-    { params }: { params: { maid_id: string } }
-) {
-    const session = await auth();
-    if (!session || !session.user || !session.user.id) {
-        return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const { maid_id } = params;
-    const { imageUrl, amount, note, date } = await req.json();
-
-    if (!maid_id || !imageUrl || !amount || !date) {
-        return new NextResponse("Missing required fields", { status: 400 });
-    }
-
-    const supabase = createServiceRoleSupabaseClient();
-
-    try {
-        const { data, error } = await supabase
-            .from("payment_receipts") // Assuming you have a table named 'payment_receipts'
-            .insert({
-                maid_id,
-                user_id: session.user.id,
-                image_url: imageUrl,
-                amount,
-                note,
-                date,
-            })
-            .select();
-
-        if (error) {
-            console.error("Error inserting receipt:", error);
-            return new NextResponse("Internal Server Error", { status: 500 });
-        }
-
-        return NextResponse.json(data[0]);
-    } catch (error) {
-        console.error("Error in POST /api/payments/[maid_id]/receipts:", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
-    }
+interface Params {
+  maid_id: string;
 }
 
-export async function GET(
-    req: Request,
-    { params }: { params: { maid_id: string } }
-) {
-    const session = await auth();
-    if (!session || !session.user || !session.user.id) {
-        return new NextResponse("Unauthorized", { status: 401 });
-    }
+/* ---------------- GET: list payments ---------------- */
+export async function GET(_req: Request, { params }: { params: Promise<Params> }) {
 
-    const { maid_id } = params;
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-    const supabase = createServiceRoleSupabaseClient();
+  const supabase = createServiceRoleSupabaseClient();
+  const { maid_id } = await params;
 
-    try {
-        const { data, error } = await supabase
-            .from("payment_receipts")
-            .select("*")
-            .eq("maid_id", maid_id)
-            .eq("user_id", session.user.id)
-            .order("date", { ascending: false });
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("maid_id", maid_id)
+    .eq("user_id", session.user.id)
+    .order("payment_date", { ascending: false });
 
-        if (error) {
-            console.error("Error fetching receipts:", error);
-            return new NextResponse("Internal Server Error", { status: 500 });
-        }
+  if (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Failed to fetch payments" }, { status: 500 });
+  }
 
-        return NextResponse.json(data);
-    } catch (error) {
-        console.error("Error in GET /api/payments/[maid_id]/receipts:", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
-    }
+  const enriched = await Promise.all(
+    data.map(async (p) => {
+      const { data: signed } = await supabase.storage
+        .from("receipts")
+        .createSignedUrl(p.image_path, 60 * 60);
+
+      return {
+        id: p.id,
+        amount: p.amount,
+        note: p.note,
+        paymentDate: p.payment_date, 
+        imagePath: p.image_path,     
+        imageUrl: signed?.signedUrl,
+      };
+    })
+  );
+
+  return NextResponse.json(enriched);
 }
 
-export async function DELETE(
-    req: Request,
-    { params }: { params: { maid_id: string } }
-) {
-    const session = await auth();
-    if (!session || !session.user || !session.user.id) {
-        return new NextResponse("Unauthorized", { status: 401 });
-    }
+/* ---------------- POST: create payment ---------------- */
+export async function POST( req: Request, { params }: { params: Promise<Params> }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-    const { maid_id } = params;
-    const { receiptId, imageUrl } = await req.json();
+  const { imagePath, amount, note, date } = await req.json();
+  if (!imagePath || !amount || !date) {
+    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  }
 
-    if (!maid_id || !receiptId || !imageUrl) {
-        return new NextResponse("Missing required fields", { status: 400 });
-    }
+  const supabase = createServiceRoleSupabaseClient();
+  const {maid_id} = await params;
 
-    const supabase = createServiceRoleSupabaseClient();
+  const { data, error } = await supabase
+    .from("payments")
+    .insert({
+      maid_id: maid_id,
+      user_id: session.user.id,
+      image_path: imagePath,
+      amount,
+      note,
+      payment_date: date,
+    })
+    .select()
+    .single();
 
-    try {
-        const imagePath = imageUrl.split('/public/receipts/')[1];
-        const { error: storageError } = await supabase.storage
-            .from('receipts')
-            .remove([imagePath]);
+  if (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Failed to create payment" }, { status: 500 });
+  }
 
-        if (storageError) {
-            console.error("Error deleting image from storage:", storageError);
-        }
-
-        const { error: dbError } = await supabase
-            .from("payment_receipts")
-            .delete()
-            .eq("id", receiptId)
-            .eq("maid_id", maid_id)
-            .eq("user_id", session.user.id);
-
-        if (dbError) {
-            console.error("Error deleting receipt from database:", dbError);
-            return new NextResponse("Internal Server Error", { status: 500 });
-        }
-
-        return new NextResponse("Receipt deleted successfully", { status: 200 });
-    } catch (error) {
-        console.error("Error in DELETE /api/payments/[maid_id]/receipts:", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
-    }
+  return NextResponse.json(data, { status: 201 });
 }

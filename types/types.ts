@@ -53,9 +53,10 @@ export interface YearlyAttendance {
 
 export interface PaymentReceipt {
   id: string;
-  date: string;
+  paymentDate: string;
   amount: number;
   imageUrl: string;
+  imagePath: string;
   note?: string;
 }
 

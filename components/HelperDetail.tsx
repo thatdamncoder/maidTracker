@@ -256,9 +256,6 @@ export default function HelperDetail ({ helper, onUpdateHelper, onBack } : Helpe
           {activeTab === 'receipts' && (
             <ReceiptUploader 
               maidId={helper.id}
-              receipts={helper.receipts || []} 
-              onAddReceipt={addReceipt} 
-              onDeleteReceipt={deleteReceipt} 
             />
           )}
         </div>
